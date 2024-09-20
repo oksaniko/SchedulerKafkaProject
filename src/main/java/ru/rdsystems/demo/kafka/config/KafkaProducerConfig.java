@@ -1,4 +1,4 @@
-package ru.rdsystems.demo.kafka;
+package ru.rdsystems.demo.kafka.config;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerConfig;
