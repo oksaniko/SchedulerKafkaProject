@@ -17,10 +17,7 @@ import ru.rdsystems.demo.repository.CurrencyRepository;
 import ru.rdsystems.demo.repository.EmployeeRepository;
 import ru.rdsystems.demo.repository.ReportRepository;
 import ru.rdsystems.demo.scheduler.schedulerApi.GetTimetableForFilters200ResponseInner;
-import ru.rdsystems.demo.service.CurrencyService;
-import ru.rdsystems.demo.service.JobService;
-import ru.rdsystems.demo.service.ReportService;
-import ru.rdsystems.demo.service.TimetableService;
+import ru.rdsystems.demo.service.*;
 
 import java.io.IOException;
 import java.net.URL;
@@ -28,7 +25,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -42,23 +38,11 @@ public class JobServiceImpl implements JobService {
 	private final CurrencyRepository currencyRepository;
 	private final ReportService reportService;
 	private final ReportRepository reportRepository;
+	private final EmployeeService employeeService;
 	private final EmployeeRepository employeeRepository;
 
 	@Value("${remote.currency.url}")
 	private String remoteCurrencyUrl;
-
-	private Double getSalaryByPosition(EmployeeEntity.EmployeePosition position){
-		Double min = 0d, max = 0d;
-		switch(position) {
-			case MANAGER:
-				min =100000d; max = 150000d; break;
-			case EMPLOYEE:
-				min = 50000d; max = 70000d; break;
-			case TECH:
-				min = 30000d; max = 50000d; break;
-		}
-		return new Random().doubles(min, max).limit(1).findFirst().getAsDouble();
-	}
 
 	@Override
 	@Scheduled(cron = "${cron.report}")
@@ -73,7 +57,7 @@ public class JobServiceImpl implements JobService {
 		if(timetableResponse.getStatusCode().is2xxSuccessful()){
 			for(EmployeeEntity employee : employeeRepository.findAll()){
 				Float hours = timetableService.calcWorkHours(timetableResponse.getBody(), employee);
-				reportService.createReport(reportId, employee, hours, getSalaryByPosition(employee.getPosition()) * hours / 8, beginDate);
+				reportService.createReport(reportId, employee, hours, employeeService.getSalaryByPosition(employee, hours), beginDate);
 			}
 		}
 	}

@@ -9,8 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.rdsystems.demo.kafka.KafkaProducer;
 import ru.rdsystems.demo.model.EmployeeEntity;
+import ru.rdsystems.demo.model.ReportEntity;
 import ru.rdsystems.demo.repository.EmployeeRepository;
+import ru.rdsystems.demo.repository.ReportRepository;
 import ru.rdsystems.demo.service.EmployeeService;
+import ru.rdsystems.demo.service.ReportService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +26,8 @@ public class WebController {
 	private final KafkaProducer producer;
 	private final EmployeeRepository employeeRepository;
 	private final EmployeeService employeeService;
+	private final ReportRepository reportRepository;
+	private final ReportService reportService;
 
 	@Value("${kafka.topic.reports}")
 	private String topicProducer;
@@ -67,6 +72,37 @@ public class WebController {
 		return ResponseEntity.status(responseStatus)
 				.contentType(MediaType.APPLICATION_JSON)
 				.body(json);
+	}
+
+	@GetMapping("/reports")
+	public ResponseEntity<List<Map<String, Object>>> getReports(){
+		return ResponseEntity.status(HttpStatus.OK)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(reportRepository.findDistinct());
+	}
+
+	@GetMapping("/reports/{id}")
+	public ResponseEntity<List<ReportEntity>> getReportById(
+			@PathVariable String id,
+			@RequestParam(required = false) String currency
+	){
+		return ResponseEntity.status(HttpStatus.OK)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(reportService.getByIdWithCurrency(id, currency == null ? "" : currency));
+	}
+
+	@PatchMapping("/reports/{id}/refresh")
+	public ResponseEntity<String> updateReportById(@PathVariable String id){
+		ResponseEntity<String> response;
+		if(!reportService.updateReportById(id).isEmpty())
+			response = ResponseEntity.status(HttpStatus.OK)
+					.contentType(MediaType.APPLICATION_JSON)
+					.body("Success");
+		else
+			response = ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.contentType(MediaType.APPLICATION_JSON)
+					.body("Report is not found");
+		return response;
 	}
 
 }

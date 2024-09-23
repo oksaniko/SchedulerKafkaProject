@@ -6,4 +6,6 @@ public interface EmployeeService {
 
 	EmployeeEntity getById(String id);
 
+	Double getSalaryByPosition(EmployeeEntity employee, Float hours);
+
 }
