@@ -1,8 +1,12 @@
 package ru.rdsystems.demo.service.implementation;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import ru.rdsystems.demo.kafka.KafkaProducer;
 import ru.rdsystems.demo.model.CurrencyEntity;
 import ru.rdsystems.demo.model.EmployeeEntity;
 import ru.rdsystems.demo.model.ReportEntity;
@@ -29,6 +33,10 @@ public class ReportServiceImpl implements ReportService {
 	private final TimetableClient timetableClient;
 	private final TimetableService timetableService;
 	private final EmployeeService employeeService;
+	private final KafkaProducer kafkaProducer;
+
+	@Value("${kafka.topic.reports}")
+	private String topicReports;
 
 	@Override
 	public ReportEntity createReport(String repId, EmployeeEntity employee, Float hours, Double salary, LocalDate beginDate) {
@@ -39,6 +47,17 @@ public class ReportServiceImpl implements ReportService {
 				repId, employee, hours, salary, LocalDateTime.now(), beginDate, LocalDate.now()
 		);
 		repository.save(entity);
+
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			String message = objectMapper.writeValueAsString(employee);
+			System.out.println("to kafka:" + message);
+			kafkaProducer.sendMessage(topicReports, message);
+		} catch (JsonProcessingException e) {
+			System.out.println("Ошибка упаковки в json " + e.getMessage());
+			throw new RuntimeException(e);
+		}
+
 		return entity;
 	}
 
