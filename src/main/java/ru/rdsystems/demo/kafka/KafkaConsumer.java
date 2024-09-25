@@ -1,6 +1,7 @@
 package ru.rdsystems.demo.kafka;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import ru.rdsystems.demo.model.EmployeeEntity;
@@ -8,6 +9,7 @@ import ru.rdsystems.demo.repository.EmployeeRepository;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class KafkaConsumer {
 
 	private final EmployeeRepository employeeRepository;
@@ -16,10 +18,10 @@ public class KafkaConsumer {
 	public void listenEmployeeMessages(String message){
 		try{
 			EmployeeEntity employee = EmployeeEntity.fromString(message);
-			System.out.println("employee = " + employee);
+			log.info("Get employee {}", employee);
 			employeeRepository.save(employee);
 		}catch (Exception ex) {
-			System.out.println("Message " + message + " can't to be parse: " + ex.getMessage());
+			log.error("Message {} can't to be parse: {}", message, ex.getMessage());
 		}
 	}
 

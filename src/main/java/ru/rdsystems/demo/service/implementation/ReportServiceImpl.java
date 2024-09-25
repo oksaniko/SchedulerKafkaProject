@@ -3,6 +3,7 @@ package ru.rdsystems.demo.service.implementation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReportServiceImpl implements ReportService {
 
 	private final ReportRepository repository;
@@ -51,10 +53,10 @@ public class ReportServiceImpl implements ReportService {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			String message = objectMapper.writeValueAsString(employee);
-			System.out.println("to kafka:" + message);
+			log.info("Message to kafka {}", message);
 			kafkaProducer.sendMessage(topicReports, message);
 		} catch (JsonProcessingException e) {
-			System.out.println("Ошибка упаковки в json " + e.getMessage());
+			log.error("Ошибка упаковки в json: " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 

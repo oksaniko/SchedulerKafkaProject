@@ -1,6 +1,7 @@
 package ru.rdsystems.demo.service.implementation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JobServiceImpl implements JobService {
 
 	private final TimetableClient timetableClient;
@@ -80,8 +82,8 @@ public class JobServiceImpl implements JobService {
 					Double.valueOf(currenciesData.get(currency).toString()),
 					valueDate);
 			}
-			System.out.println("currency rates are loaded");
+			log.info("Currency rates are loaded");
 		}else
-			System.out.println("currencyRepository is not empty");
+			log.info("CurrencyRepository is not empty");
 	}
 }
