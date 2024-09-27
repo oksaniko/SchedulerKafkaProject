@@ -52,10 +52,10 @@ public class WebController {
 	}
 
 	@GetMapping("/employees")
-	public ResponseEntity<List<EmployeeEntity>> getEmployees(){
+	public ResponseEntity<Map<String, Object>> getEmployees(){
 		return ResponseEntity.status(HttpStatus.OK)
 				.contentType(MediaType.APPLICATION_JSON)
-				.body(employeeRepository.findAll());
+				.body(Map.of("employees",employeeRepository.findAll()));
 	}
 
 	@GetMapping("/employees/{id}")
@@ -82,13 +82,14 @@ public class WebController {
 	}
 
 	@GetMapping("/reports/{id}")
-	public ResponseEntity<List<ReportEntity>> getReportById(
+	public ResponseEntity<Map<String,Object>> getReportById(
 			@PathVariable String id,
 			@RequestParam(required = false) String currency
 	){
 		return ResponseEntity.status(HttpStatus.OK)
 				.contentType(MediaType.APPLICATION_JSON)
-				.body(reportService.getByIdWithCurrency(id, currency == null ? "" : currency));
+				.body(Map.of("reportData",
+						reportService.getByIdWithCurrency(id, currency == null ? "" : currency)));
 	}
 
 	@PatchMapping("/reports/{id}/refresh")
