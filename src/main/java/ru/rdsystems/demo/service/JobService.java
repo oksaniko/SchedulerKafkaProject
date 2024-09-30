@@ -6,4 +6,6 @@ public interface JobService {
 
 	void createReport();
 	void getCurrencyRate() throws IOException;
+	void repeatSendToKafka();
+
 }

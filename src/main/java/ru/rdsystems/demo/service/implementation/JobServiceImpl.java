@@ -10,12 +10,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import ru.rdsystems.demo.kafka.KafkaProducer;
 import ru.rdsystems.demo.model.EmployeeEntity;
+import ru.rdsystems.demo.model.KafkaErrorMessage;
 import ru.rdsystems.demo.model.ReportEntity;
 import ru.rdsystems.demo.remote.CurrencyClient;
 import ru.rdsystems.demo.remote.TimetableClient;
 import ru.rdsystems.demo.repository.CurrencyRepository;
 import ru.rdsystems.demo.repository.EmployeeRepository;
+import ru.rdsystems.demo.repository.KafkaErrorMessageRepository;
 import ru.rdsystems.demo.repository.ReportRepository;
 import ru.rdsystems.demo.scheduler.schedulerApi.GetTimetableForFilters200ResponseInner;
 import ru.rdsystems.demo.service.*;
@@ -42,6 +45,9 @@ public class JobServiceImpl implements JobService {
 	private final ReportRepository reportRepository;
 	private final EmployeeService employeeService;
 	private final EmployeeRepository employeeRepository;
+	private final KafkaErrorMessageRepository kafkaErrorRepository;
+	private final KafkaErrorMessageService kafkaErrorService;
+	private final KafkaProducer producer;
 
 	@Value("${remote.currency.url}")
 	private String remoteCurrencyUrl;
@@ -85,5 +91,20 @@ public class JobServiceImpl implements JobService {
 			log.info("Currency rates are loaded");
 		}else
 			log.info("CurrencyRepository is not empty");
+	}
+
+	@Override
+	@Scheduled(cron = "${cron.kafka.error}")
+	public void repeatSendToKafka() {
+		List<KafkaErrorMessage> errorList = kafkaErrorRepository.findAll();
+		if(errorList.isEmpty())
+			log.info("No message for repeat sending");
+		else
+			for(KafkaErrorMessage message : errorList) {
+				if(producer.sendMessage(message.getTopicName(), message.getMessage())){
+					kafkaErrorService.deleteById(message.getId());
+					log.info("Message '{}' send", message);
+				}
+			}
 	}
 }
